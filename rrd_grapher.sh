@@ -133,8 +133,6 @@ generar_grafica() {
         OPTS+=("GPRINT:$SAFE_NAME:MAX: Max\:%6.2lf%%\\n")
         
         ((CONTADOR++))
-    done < <(echo "$JSON_DATA" | jq -r '.[] | length' | grep -v "traefik-global-requests") # BROKEN LOGIC
-    # Better approach: filter inside the loop or use correct jq filter
     done < <(echo "$JSON_DATA" | jq -r '.[] | select(.name != "traefik-global-requests") | .name')
 
     # Footer
