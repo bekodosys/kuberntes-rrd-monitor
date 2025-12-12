@@ -87,7 +87,7 @@ kubectl apply -f kubectl/04-StatefulSet.yaml
 ```
 
 ### 3. Acceso Externo (Ingress)
-Integrado bajo `yeti.bekodo.com/rrd`.
+Integrado bajo `tudominio.com/rrd`.
 ```bash
 kubectl apply -f kubectl/03-ingress.yaml
 ```
