@@ -11,58 +11,113 @@ metadata:
 data:
   index.html: |
     <!DOCTYPE html>
-    <html lang="es">
+    <html lang="es" data-bs-theme="dark">
     <head>
         <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
         <meta http-equiv="refresh" content="300">
-        <title>Triviere Cluster Metrics</title>
-        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+        <title>Kubernetes Cluster Metrics</title>
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
         <style>
-            body { background-color: #121212; color: white; padding: 20px; }
-            .img-container { margin-bottom: 20px; text-align: center; }
-            .large-img { border: 1px solid #333; box-shadow: 0 4px 8px rgba(0,0,0,0.5); }
-            h3 { border-bottom: 1px solid #333; padding-bottom: 10px; margin-bottom: 15px; color: #0dcaf0; }
+            body { background-color: #0d1117; font-family: 'Segoe UI', system-ui, sans-serif; }
+            .navbar { background-color: #161b22; border-bottom: 1px solid #30363d; }
+            .card { background-color: #161b22; border: 1px solid #30363d; box-shadow: 0 4px 6px rgba(0,0,0,0.3); transition: transform 0.2s; }
+            .card:hover { transform: translateY(-2px); border-color: #58a6ff; }
+            .card-header { border-bottom: 1px solid #30363d; background-color: rgba(255,255,255,0.02); color: #e6edf3; font-weight: 600; }
+            .img-fluid { border-radius: 4px; }
+            .footer { color: #8b949e; font-size: 0.85rem; padding: 20px 0; border-top: 1px solid #30363d; margin-top: 40px; }
+            h1 { color: #e6edf3; font-weight: 300; letter-spacing: -1px; }
         </style>
     </head>
     <body>
-        <div class="container-fluid">
-            <h1 class="text-center mb-4">Monitorización Kubernetes (Stacked)</h1>
+        <nav class="navbar navbar-expand-lg navbar-dark mb-4">
+            <div class="container">
+                <a class="navbar-brand" href="#">
+                    <span class="text-primary fw-bold">RRD</span> Monitor
+                </a>
+                <span class="navbar-text text-secondary">Kubernetes Cluster Stats</span>
+            </div>
+        </nav>
 
-            <h3 class="mt-4 text-white">CPU Usage</h3>
-            <div class="row">
-                <div class="col-lg-6 img-container">
-                    <a href="rrd/graph_cpu_day.png" target="_blank">
-                        <img src="rrd/graph_cpu_day.png" alt="CPU Day" class="img-fluid large-img">
-                    </a>
-                    <p class="mt-2 text-white">Últimas 24 Horas</p>
-                </div>
-                <div class="col-lg-6 img-container">
-                    <a href="rrd/graph_cpu_week.png" target="_blank">
-                        <img src="rrd/graph_cpu_week.png" alt="CPU Week" class="img-fluid large-img">
-                    </a>
-                    <p class="mt-2 text-white">Última Semana</p>
+        <div class="container">
+            <div class="row mb-5">
+                <div class="col-12 text-center">
+                    <h1 class="display-5 mb-3">System Overview</h1>
+                    <p class="lead text-secondary">Real-time CPU and Memory utilization metrics.</p>
                 </div>
             </div>
 
-            <h3 class="mt-4 text-white">Memory Usage</h3>
-            <div class="row">
-                <div class="col-lg-6 img-container">
-                    <a href="rrd/graph_mem_day.png" target="_blank">
-                        <img src="rrd/graph_mem_day.png" alt="Memory Day" class="img-fluid large-img">
-                    </a>
-                    <p class="mt-2 text-white">Últimas 24 Horas</p>
+            <!-- CPU SECTION -->
+            <div class="row mb-4">
+                <div class="col-12"><h3 class="text-white border-bottom border-secondary pb-2 mb-4">CPU Usage</h3></div>
+                
+                <div class="col-md-6 mb-4">
+                    <div class="card h-100">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <span>Last 24 Hours</span>
+                            <span class="badge bg-primary bg-opacity-10 text-primary border border-primary text-opacity-75">Daily</span>
+                        </div>
+                        <div class="card-body text-center p-2">
+                            <a href="rrd/graph_cpu_day.png" target="_blank">
+                                <img src="rrd/graph_cpu_day.png" alt="CPU Day" class="img-fluid">
+                            </a>
+                        </div>
+                    </div>
                 </div>
-                <div class="col-lg-6 img-container">
-                    <a href="rrd/graph_mem_week.png" target="_blank">
-                        <img src="rrd/graph_mem_week.png" alt="Memory Week" class="img-fluid large-img">
-                    </a>
-                    <p class="mt-2 text-white">Última Semana</p>
+
+                <div class="col-md-6 mb-4">
+                    <div class="card h-100">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <span>Last Week</span>
+                            <span class="badge bg-success bg-opacity-10 text-success border border-success text-opacity-75">Weekly</span>
+                        </div>
+                        <div class="card-body text-center p-2">
+                            <a href="rrd/graph_cpu_week.png" target="_blank">
+                                <img src="rrd/graph_cpu_week.png" alt="CPU Week" class="img-fluid">
+                            </a>
+                        </div>
+                    </div>
                 </div>
             </div>
-            
-            <div class="text-center mt-4 text-white">
-                <small>Generado automáticamente</small>
+
+            <!-- MEMORY SECTION -->
+            <div class="row mb-4">
+                <div class="col-12"><h3 class="text-white border-bottom border-secondary pb-2 mb-4">Memory Usage</h3></div>
+
+                <div class="col-md-6 mb-4">
+                    <div class="card h-100">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <span>Last 24 Hours</span>
+                            <span class="badge bg-warning bg-opacity-10 text-warning border border-warning text-opacity-75">Daily</span>
+                        </div>
+                        <div class="card-body text-center p-2">
+                            <a href="rrd/graph_mem_day.png" target="_blank">
+                                <img src="rrd/graph_mem_day.png" alt="Memory Day" class="img-fluid">
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-6 mb-4">
+                    <div class="card h-100">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <span>Last Week</span>
+                            <span class="badge bg-danger bg-opacity-10 text-danger border border-danger text-opacity-75">Weekly</span>
+                        </div>
+                        <div class="card-body text-center p-2">
+                            <a href="rrd/graph_mem_week.png" target="_blank">
+                                <img src="rrd/graph_mem_week.png" alt="Memory Week" class="img-fluid">
+                            </a>
+                        </div>
+                    </div>
+                </div>
             </div>
+
+            <footer class="footer text-center">
+                <p class="mb-0">Generated by Kubernetes RRD Monitor &bull; <span class="text-light">Auto-refresh: 5m</span></p>
+            </footer>
         </div>
+        
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     </body>
     </html>
