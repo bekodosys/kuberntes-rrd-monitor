@@ -62,7 +62,8 @@ def get_pod_metrics_map(custom_api):
 
 def get_traefik_metrics():
     """Obtiene métricas de Traefik y retorna un dict {service_name: total_requests}."""
-    url = "http://traefik.kube-system.svc.cluster.local:9100/metrics"
+    # Usamos el nuevo servicio especifico para metricas
+    url = "http://traefik-metrics.kube-system.svc.cluster.local:9100/metrics"
     req_map = {}
     try:
         r = requests.get(url, timeout=2)
