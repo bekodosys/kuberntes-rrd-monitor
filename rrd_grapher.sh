@@ -39,8 +39,25 @@ if [ -z "$JSON_DATA" ]; then
 fi
 
 # 2. ACTUALIZAR RRDs
-echo "$JSON_DATA" | jq -r '.[] | "\(.name) \(.cpu_v) \(.mem_mib)"' | while read -r name cpu mem; do
+echo "$JSON_DATA" | jq -r '.[] | "\(.name) \(.cpu_v) \(.mem_mib) \(.requests)"' | while read -r name cpu mem requests; do
     RRD_FILE="$DIR_RRD/$name.rrd"
+    
+    # CASO ESPECIAL: Traefik Global Requests
+    if [ "$name" == "traefik-global-requests" ]; then
+        if [ ! -f "$RRD_FILE" ]; then
+            rrdtool create "$RRD_FILE" --step 300 \
+                DS:requests:DERIVE:600:0:U \
+                RRA:AVERAGE:0.5:1:288 \
+                RRA:AVERAGE:0.5:6:336 \
+                RRA:AVERAGE:0.5:24:372 \
+                RRA:AVERAGE:0.5:288:366
+        fi
+        # DERIVE necesita valores enteros crecientes (contadores)
+        rrdtool update "$RRD_FILE" N:$requests
+        continue
+    fi
+
+    # CASO NORMAL: CPU/MEM Deployments
     if [ ! -f "$RRD_FILE" ]; then
         rrdtool create "$RRD_FILE" --step 300 \
             DS:cpu:GAUGE:600:0:U \
@@ -125,10 +142,38 @@ generar_grafica() {
 
     rrdtool "${OPTS[@]}" >/dev/null
     echo "Gráfica generada: $OUT_IMG"
+    rrdtool "${OPTS[@]}" >/dev/null
+    echo "Gráfica generada: $OUT_IMG"
+}
+
+generar_grafica_red() {
+    PERIODO=$1
+    TITULO="Traefik Global RPS - $PERIODO"
+    OUT_IMG="$DIR_RRD/graph_net_${PERIODO}.png"
+    RRD_FILE="$DIR_RRD/traefik-global-requests.rrd"
+
+    # Si no existe aun el rrd de red, salir
+    [ ! -f "$RRD_FILE" ] && return
+
+    rrdtool graph "$OUT_IMG" \
+        --start "-1$PERIODO" \
+        -w "$ANCHO" -h "$ALTO" -a PNG --slope-mode \
+        --title "$TITULO" \
+        --vertical-label "Req / Sec" \
+        --lower-limit 0 \
+        --color "CANVAS#000000" --color "FONT#FFFFFF" --color "BACK#000000" \
+        DEF:req=$RRD_FILE:requests:AVERAGE \
+        AREA:req#3380FF:"Total Requests" \
+        GPRINT:req:LAST:"Cur\: %6.2lf RPS" \
+        GPRINT:req:AVERAGE:"Avg\: %6.2lf RPS" \
+        GPRINT:req:MAX:"Max\: %6.2lf RPS\n" >/dev/null
+
+    echo "Gráfica Red generada: $OUT_IMG"
 }
 
 # 4. EJECUCIÓN
 for p in day week month year; do
     generar_grafica "cpu" "$TOTAL_CPU_CORES" "$p"
     generar_grafica "mem" "$TOTAL_MEM_MIB" "$p"
+    generar_grafica_red "$p"
 done

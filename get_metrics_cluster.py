@@ -1,5 +1,7 @@
 import json
 import sys
+import requests
+import re
 from kubernetes import client, config
 
 def parse_cpu(quantity):
@@ -58,6 +60,33 @@ def get_pod_metrics_map(custom_api):
         
     return metrics_map
 
+def get_traefik_metrics():
+    """Obtiene métricas de Traefik y retorna un dict {service_name: total_requests}."""
+    url = "http://traefik.kube-system.svc.cluster.local:9100/metrics"
+    req_map = {}
+    try:
+        r = requests.get(url, timeout=2)
+        if r.status_code == 200:
+            # Parsear formato Prometheus linea a linea
+            # traefik_service_requests_total{code="200",...,service="default-yeti-service-80@kubernetes"} 123
+            for line in r.text.splitlines():
+                if line.startswith("traefik_service_requests_total"):
+                    # Extraer servicio y valor
+                    match = re.search(r'service="([^"]+)"', line)
+                    if match:
+                        full_svc = match.group(1) # ej: rrd-monitor-rrd-web-service-80@kubernetes
+                        val = float(line.split()[-1])
+                        
+                        # Limpiar nombre del servicio para intentar cruzarlo
+                        # Asumimos formato: namespace-svcname-port@kubernetes
+                        # Queremos agrupar por "service_name" (sin namespace ni puerto si es posible) o dejarlos raw
+                        
+                        req_map[full_svc] = req_map.get(full_svc, 0) + val
+    except Exception as e:
+        sys.stderr.write(f"Warning: Error obteniendo metricas Traefik: {e}\n")
+        
+    return req_map
+
 def main():
     # ---------------------------------------------------------
     # 1. AUTENTICACIÓN HÍBRIDA (Cluster vs Local)
@@ -85,6 +114,7 @@ def main():
         sys.exit(1)
 
     metrics_map = get_pod_metrics_map(custom_api)
+    traefik_requests = get_traefik_metrics()
     
     datos_salida = []
 
@@ -125,10 +155,25 @@ def main():
             "name": name,
             "replicas": replicas,
             "cpu_v": round(cpu_usage, 3),
-            "mem_mib": round(mem_usage, 1)
+            "mem_mib": round(mem_usage, 1),
+            "requests": 0 # Placeholder por si logramos cruzar datos en el futuro
         }
         
         datos_salida.append(fila)
+        
+    # Añadir métricas de Traefik como objetos separados "Network" para graficar
+    # Simplificamos: Sumamos todas las requests del cluster para una gráfica global "Traefik Global"
+    total_req = sum(traefik_requests.values())
+    if total_req > 0:
+         datos_salida.append({
+            "category": "NET",
+            "type": "Network",
+            "name": "traefik-global-requests",
+            "replicas": 1,
+            "cpu_v": 0,
+            "mem_mib": 0,
+            "requests": int(total_req)
+         })
 
     # 6. Imprimir JSON limpio a STDOUT
     print(json.dumps(datos_salida, indent=2, ensure_ascii=False))
