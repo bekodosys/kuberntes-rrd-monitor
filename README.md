@@ -67,6 +67,9 @@ El orden de aplicación es importante:
 # Crear Namespace y ConfigMap (Dashboard HTML)
 kubectl apply -f kubectl/06-configmap.yaml
 
+# Servicio para Métricas de Traefik (Puerto 9100)
+kubectl apply -f kubectl/09-traefik-metrics-service.yaml
+
 # Cuentas de Servicio y Roles (RBAC)
 kubectl apply -f kubectl/00-serviceaccount.yaml
 kubectl apply -f kubectl/01-clusterrole.yaml
