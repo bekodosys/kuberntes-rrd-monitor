@@ -54,7 +54,7 @@ spec:
       # CONTENEDOR 2: WORKER (Backend Cron)
       # ---------------------------------------------------------
       - name: worker
-        image: my-registry/rrd-worker:latest
+        image: bekodo/kubernetes-rrd-monitor:latest
         imagePullPolicy: IfNotPresent
         # Forzamos el modo foreground
         command: ["cron", "-f"]
