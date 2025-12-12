@@ -55,9 +55,9 @@ spec:
       # ---------------------------------------------------------
       - name: worker
         image: bekodo/kubernetes-rrd-monitor:latest
-        imagePullPolicy: IfNotPresent
+        imagePullPolicy: Always
         # Forzamos el modo foreground
-        command: ["cron", "-f"]
+
         resources:           # <--- AÑADIR AQUI
           requests:
             cpu: "50m"       # 0.05 cores garantizados
