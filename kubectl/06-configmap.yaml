@@ -1,0 +1,68 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: rrd-monitor
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: html-config
+  namespace: rrd-monitor
+data:
+  index.html: |
+    <!DOCTYPE html>
+    <html lang="es">
+    <head>
+        <meta charset="UTF-8">
+        <meta http-equiv="refresh" content="300">
+        <title>Triviere Cluster Metrics</title>
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+        <style>
+            body { background-color: #121212; color: white; padding: 20px; }
+            .img-container { margin-bottom: 20px; text-align: center; }
+            .large-img { border: 1px solid #333; box-shadow: 0 4px 8px rgba(0,0,0,0.5); }
+            h3 { border-bottom: 1px solid #333; padding-bottom: 10px; margin-bottom: 15px; color: #0dcaf0; }
+        </style>
+    </head>
+    <body>
+        <div class="container-fluid">
+            <h1 class="text-center mb-4">Monitorización Kubernetes (Stacked)</h1>
+
+            <h3 class="mt-4 text-white">CPU Usage</h3>
+            <div class="row">
+                <div class="col-lg-6 img-container">
+                    <a href="rrd/graph_cpu_day.png" target="_blank">
+                        <img src="rrd/graph_cpu_day.png" alt="CPU Day" class="img-fluid large-img">
+                    </a>
+                    <p class="mt-2 text-white">Últimas 24 Horas</p>
+                </div>
+                <div class="col-lg-6 img-container">
+                    <a href="rrd/graph_cpu_week.png" target="_blank">
+                        <img src="rrd/graph_cpu_week.png" alt="CPU Week" class="img-fluid large-img">
+                    </a>
+                    <p class="mt-2 text-white">Última Semana</p>
+                </div>
+            </div>
+
+            <h3 class="mt-4 text-white">Memory Usage</h3>
+            <div class="row">
+                <div class="col-lg-6 img-container">
+                    <a href="rrd/graph_mem_day.png" target="_blank">
+                        <img src="rrd/graph_mem_day.png" alt="Memory Day" class="img-fluid large-img">
+                    </a>
+                    <p class="mt-2 text-white">Últimas 24 Horas</p>
+                </div>
+                <div class="col-lg-6 img-container">
+                    <a href="rrd/graph_mem_week.png" target="_blank">
+                        <img src="rrd/graph_mem_week.png" alt="Memory Week" class="img-fluid large-img">
+                    </a>
+                    <p class="mt-2 text-white">Última Semana</p>
+                </div>
+            </div>
+            
+            <div class="text-center mt-4 text-white">
+                <small>Generado automáticamente</small>
+            </div>
+        </div>
+    </body>
+    </html>

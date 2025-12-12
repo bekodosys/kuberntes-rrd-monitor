@@ -1,0 +1,81 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: rrd-sts
+  namespace: rrd-monitor
+spec:
+  serviceName: "rrd-headless"
+  replicas: 1
+  selector:
+    matchLabels:
+      app: rrd-app
+  template:
+    metadata:
+      labels:
+        app: rrd-app
+    spec:
+      serviceAccountName: rrd-worker-sa
+      containers:
+      # ---------------------------------------------------------
+      # CONTENEDOR 1: NGINX (Frontend)
+      # ---------------------------------------------------------
+      - name: nginx
+        image: nginx:alpine
+        ports:
+          - containerPort: 80
+        resources:           # <--- AÑADIR AQUI
+          requests:
+            cpu: "10m"       # 0.01 cores garantizados
+            memory: "32Mi"   # 32 MB RAM garantizados
+          limits:
+            cpu: "100m"      # Max 0.1 cores
+            memory: "64Mi"   # Max 64 MB RAM
+        volumeMounts:
+          # 1. Montamos el HTML base en el primer nivel /rrd
+          - name: html-vol
+            mountPath: /usr/share/nginx/html/rrd/index.html
+            subPath: index.html
+          
+          # 2. Montamos el volumen de datos ANIDADO dentro del anterior
+          - name: rrd-data-pvc
+            mountPath: /usr/share/nginx/html/rrd/rrd
+            readOnly: true
+
+      # ---------------------------------------------------------
+      # CONTENEDOR 2: WORKER (Backend Cron)
+      # ---------------------------------------------------------
+      - name: worker
+        image: my-registry/rrd-worker:latest
+        imagePullPolicy: IfNotPresent
+        # Forzamos el modo foreground
+        command: ["cron", "-f"]
+        resources:           # <--- AÑADIR AQUI
+          requests:
+            cpu: "50m"       # 0.05 cores garantizados
+            memory: "128Mi"  # Python necesita algo de "colchón"
+          limits:
+            cpu: "500m"      # Le dejamos picos de medio core para generar gráficas rápido
+            memory: "256Mi"  # Límite duro para evitar fugas
+        volumeMounts:
+          # El worker ve el volumen en una ruta simple para escribir
+          - name: rrd-data-pvc
+            mountPath: /data
+        # NOTA: Tu script python debe estar configurado para escribir
+        # los .png en /data/cpu_graph.png, etc.
+
+      volumes:
+      - name: html-vol
+        configMap:
+          name: html-config
+
+  # ---------------------------------------------------------
+  # PERSISTENCIA (PVC)
+  # ---------------------------------------------------------
+  volumeClaimTemplates:
+  - metadata:
+      name: rrd-data-pvc
+    spec:
+      accessModes: [ "ReadWriteOnce" ]
+      resources:
+        requests:
+          storage: 1Gi

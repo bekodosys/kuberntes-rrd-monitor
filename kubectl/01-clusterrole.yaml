@@ -1,0 +1,19 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: global-cluster-reader
+rules:
+  # 1. Acceso a Core (Pods, Nodos)
+  - apiGroups: [""]
+    resources: ["nodes", "nodes/status", "pods", "namespaces"]
+    verbs: ["get", "list", "watch"]
+  
+  # 2. NUEVO: Acceso a Apps (Para listar Deployments)
+  - apiGroups: ["apps"]
+    resources: ["deployments"]
+    verbs: ["get", "list", "watch"]
+  
+  # 3. Acceso a Métricas
+  - apiGroups: ["metrics.k8s.io"]
+    resources: ["pods", "nodes"]
+    verbs: ["get", "list", "watch"]

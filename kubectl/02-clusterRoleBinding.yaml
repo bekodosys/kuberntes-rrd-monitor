@@ -1,0 +1,14 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: rrd-worker-global-binding
+subjects:
+  # Referencia a tu ServiceAccount del namespace rrd-monitor
+  - kind: ServiceAccount
+    name: rrd-worker-sa
+    namespace: rrd-monitor
+roleRef:
+  # Referencia al rol global definido arriba
+  kind: ClusterRole
+  name: global-cluster-reader
+  apiGroup: rbac.authorization.k8s.io

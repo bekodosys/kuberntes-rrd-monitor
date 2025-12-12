@@ -1,0 +1,28 @@
+# 1. Servicio Headless (Para la identidad del StatefulSet)
+apiVersion: v1
+kind: Service
+metadata:
+  name: rrd-headless
+  namespace: rrd-monitor
+spec:
+  ports:
+  - port: 80
+    name: web
+  clusterIP: None
+  selector:
+    app: rrd-app
+---
+# 2. Servicio ClusterIP (Para que apunte el Ingress)
+apiVersion: v1
+kind: Service
+metadata:
+  name: rrd-web-service
+  namespace: rrd-monitor
+spec:
+  type: ClusterIP
+  selector:
+    app: rrd-app
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 80
