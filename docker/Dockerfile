@@ -7,7 +7,10 @@ RUN apt-get update && apt-get install -y \
     cron \
     jq \
     bc \
+    tzdata \
     && rm -rf /var/lib/apt/lists/*
+
+ENV TZ=Europe/Madrid
 
 WORKDIR /app
 
