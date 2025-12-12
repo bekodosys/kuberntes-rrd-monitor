@@ -40,13 +40,6 @@ data:
         </nav>
 
         <div class="container">
-            <div class="row mb-5">
-                <div class="col-12 text-center">
-                    <h1 class="display-5 mb-3">System Overview</h1>
-                    <p class="lead text-secondary">Real-time CPU and Memory utilization metrics.</p>
-                </div>
-            </div>
-
             <!-- CPU SECTION -->
             <div class="row mb-4">
                 <div class="col-12"><h3 class="text-white border-bottom border-secondary pb-2 mb-4">CPU Usage</h3></div>
