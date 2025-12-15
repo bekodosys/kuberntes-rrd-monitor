@@ -1,11 +1,38 @@
 # Kubernetes RRD Monitor
 
-Monitor de métricas ligero para clusters Kubernetes que genera gráficas RRD (Round Robin Database) históricas de CPU y Memoria (Día, Semana, Mes, Año).
+
+**Monitor de métricas ligero para clusters Kubernetes que genera gráficas históricas de CPU, Memoria y Tráfico.**
+
+Este proyecto ofrece una solución mínima y robusta para visualizar el estado de un cluster Kubernetes sin la complejidad de mantener un stack completo de Prometheus + Grafana. Utiliza **RRDtool** (Round Robin Database) para almacenar métricas y generar gráficas estáticas (PNG) que se sirven a través de un dashboard web simple y ligero.
+
+### Características Principales
+- **Ligero y Eficiente**: Consume muy pocos recursos (CPU/RAM).
+- **Histórico Persistente**: Gráficas de último día y última semana para CPU, Memoria y Red.
+- **Sin Dependencias Externas**: No requiere bases de datos externas ni configuraciones complejas.
+- **Seguro**: Acceso protegido mediante Autenticación Básica (Nginx).
+- **Stand-alone**: Funciona como un único StatefulSet autónomo.
 
 ## Arquitectura
-- **Worker (StatefulSet):** Python script que consulta la API de Kubernetes cada 5 minutos (Cron) y actualiza las BBDD RRD.
-- **Frontend (Nginx):** Sirve los ficheros estáticos HTML y las imágenes PNG generadas. Protegido con Basic Auth.
-- **Persistencia:** PVC `rrd-data-pvc` compartido entre worker y nginx.
+
+El sistema se ejecuta dentro del cluster y consta de los siguientes componentes integrados en un `StatefulSet`:
+
+1.  **Recolección de Datos (Worker)**:
+    - Un script en **Python** se ejecuta periódicamente (via Cron) cada 5 minutos.
+    - Consulta la API de Kubernetes para obtener métricas de Nodos (CPU/RAM).
+    - Consulta el endpoint de métricas de **Traefik** (si está disponible) para tráfico de red.
+    - Almacena los datos en ficheros `.rrd`.
+
+2.  **Generación de Gráficas**:
+    - Tras cada recolección, un script shell utiliza `rrdtool graph` para renderizar archivos PNG actualizados.
+    - Se generan vistas diarias y semanales.
+
+3.  **Frontend (Nginx)**:
+    - Un servidor Nginx ligero sirve el dashboard HTML estático y las imágenes generadas.
+    - Maneja la autenticación de usuarios (Basic Auth).
+    - Expone el servicio via Service/Ingress.
+
+4.  **Persistencia**:
+    - Un volumen persistente (`PVC`) asegura que los ficheros de base de datos RRD sobrevivan a reinicios del pod, manteniendo el histórico de datos.
 
 ## 1. Prerrequisitos
 - Cluster Kubernetes.
@@ -17,7 +44,7 @@ Si realizas cambios en el código (`get_metrics_cluster.py`, `rrd_grapher.sh` o 
 
 ```bash
 # Define tu registry
-export REGISTRY="bekodo"
+export REGISTRY="[usuario_dockerhub]"
 
 # Construir y subir (desde la raíz del proyecto)
 docker build --platform linux/amd64 -t $REGISTRY/kubernetes-rrd-monitor:latest -f docker/Dockerfile .
@@ -95,7 +122,22 @@ Integrado bajo `tudominio.com/rrd`.
 kubectl apply -f kubectl/03-ingress.yaml
 ```
 
-## 5. Verificación y Logs
+## 5. Descripción de Archivos
+
+| Archivo | Descripción |
+|---------|-------------|
+| `00-serviceaccount.yaml` | ServiceAccount para los permisos del pod. |
+| `01-clusterrole.yaml` | Roles con permisos para leer métricas del clúster. |
+| `02-clusterRoleBinding.yaml` | Asocia el ServiceAccount con el ClusterRole. |
+| `03-ingress.yaml` | (Opcional) Configuración de Ingress para acceso externo. |
+| `04-StatefulSet.yaml` | Definición principal de la carga de trabajo (Nginx + Worker Python). |
+| `05-service.yaml` | Servicio para exponer la aplicación internamente. |
+| `06-configmap.yaml` | Configuración HTML y scripts. |
+| `07-secret.yaml` | Credenciales para autenticación básica (Basic Auth). |
+| `08-nginx-config.yaml` | Configuración específica de Nginx. |
+| `09-traefik-metrics-service.yaml` | Servicio para métricas de Traefik (si aplica). |
+
+## 6. Verificación y Logs
 
 Verificar que los pods están corriendo:
 ```bash
@@ -112,3 +154,8 @@ Acceso local rápido (Port Forward):
 kubectl port-forward -n rrd-monitor sts/rrd-sts 8080:80
 # Abrir en navegador: http://localhost:8080
 ```
+
+## 7. Solución de Problemas
+
+- **Permisos RBAC**: Si ves errores de "Forbidden" en los logs del worker, verifica que el `ClusterRole` y `ClusterRoleBinding` se hayan aplicado correctamente.
+- **Volúmenes**: Si el pod se queda en `ContainerCreating`, revisa que tu clúster tenga un StorageClass por defecto o que el PVC se pueda provisionar correctamente.
