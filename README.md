@@ -12,6 +12,9 @@ Este proyecto ofrece una solución mínima y robusta para visualizar el estado d
 - **Seguro**: Acceso protegido mediante Autenticación Básica (Nginx).
 - **Stand-alone**: Funciona como un único StatefulSet autónomo.
 
+### Dashboard
+![Dashboard Preview](img/dashboard.png)
+
 ## Arquitectura
 
 El sistema se ejecuta dentro del cluster y consta de los siguientes componentes integrados en un `StatefulSet`:

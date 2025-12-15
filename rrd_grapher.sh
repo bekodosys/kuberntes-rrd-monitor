@@ -94,7 +94,8 @@ generar_grafica() {
         "--font" "DEFAULT:10:Monospace"
         "--font" "TITLE:13:Monospace"
         "--font" "LEGEND:10:Monospace"
-        "--font" "AXIS:9:Monospace"    
+        "--font" "AXIS:9:Monospace"
+        "--watermark" "Bekodo"
         )
 
     CONTADOR=0
@@ -128,20 +129,17 @@ generar_grafica() {
         LABEL_PADDED=$(printf "%-20s" "${name:0:20}")
         
         OPTS+=("$MODO:$SAFE_NAME$COLOR:$LABEL_PADDED")
-        OPTS+=("GPRINT:$SAFE_NAME:LAST:Cur\:%6.2lf%%")
-        OPTS+=("GPRINT:$SAFE_NAME:AVERAGE: Avg\:%6.2lf%%")
-        OPTS+=("GPRINT:$SAFE_NAME:MAX: Max\:%6.2lf%%\\n")
+        OPTS+=("GPRINT:$SAFE_NAME:LAST:Current\:%6.2lf%%")
+        OPTS+=("GPRINT:$SAFE_NAME:AVERAGE:\tAverage\:%6.2lf%%")
+        OPTS+=("GPRINT:$SAFE_NAME:MAX:\tMaximum\:%6.2lf%%\\n")
         
         ((CONTADOR++))
     done < <(echo "$JSON_DATA" | jq -r '.[] | select(.name != "traefik-global-requests") | .name')
 
     # Footer
-    OPTS+=("COMMENT: \\n")
-    # Usamos la variable capturada con tu método
+    OPTS+=("COMMENT: \n")
     OPTS+=("COMMENT:Last data update\: $RRDDATE\r")
 
-    rrdtool "${OPTS[@]}" >/dev/null
-    echo "Gráfica generada: $OUT_IMG"
     rrdtool "${OPTS[@]}" >/dev/null
     echo "Gráfica generada: $OUT_IMG"
 }
@@ -151,6 +149,7 @@ generar_grafica_red() {
     TITULO="Traefik Global RPS - $PERIODO"
     OUT_IMG="$DIR_RRD/graph_net_${PERIODO}.png"
     RRD_FILE="$DIR_RRD/traefik-global-requests.rrd"
+    RRDDATE=$(rrdtool last "$RRD_FILE" | xargs -I {} date -d @{} "+%d/%m/%Y %H\:%M\:%S")
 
     # Si no existe aun el rrd de red, salir
     [ ! -f "$RRD_FILE" ] && return
@@ -161,12 +160,21 @@ generar_grafica_red() {
         --title "$TITULO" \
         --vertical-label "Req / Sec" \
         --lower-limit 0 \
-        --color "CANVAS#000000" --color "FONT#FFFFFF" --color "BACK#000000" \
-        DEF:req=$RRD_FILE:requests:AVERAGE \
-        AREA:req#3380FF:"Total Requests" \
-        GPRINT:req:LAST:"Cur\: %6.2lf RPS" \
-        GPRINT:req:AVERAGE:"Avg\: %6.2lf RPS" \
-        GPRINT:req:MAX:"Max\: %6.2lf RPS\n" >/dev/null
+        --color "CANVAS#000000" \
+        --color "FONT#FFFFFF" \
+        --color "BACK#000000" \
+        --font "DEFAULT:10:Monospace" \
+        --font "TITLE:13:Monospace" \
+        --font "LEGEND:10:Monospace" \
+        --font "AXIS:9:Monospace" \
+        --watermark "Bekodo" \
+        "DEF:req=$RRD_FILE:requests:AVERAGE" \
+        "AREA:req#3380FF:Total Requests" \
+        "GPRINT:req:LAST:Current\: %6.2lf RPS" \
+        "GPRINT:req:AVERAGE:\tAverage\: %6.2lf RPS" \
+        "GPRINT:req:MAX:\tMaximum\: %6.2lf RPS" \
+        "COMMENT: \n" \
+        "COMMENT:Last data update\: $RRDDATE\r"
 
     echo "Gráfica Red generada: $OUT_IMG"
 }
